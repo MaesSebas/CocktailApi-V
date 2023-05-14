@@ -10,5 +10,8 @@ module.exports = {
     },
     user: async () => {
         return await models.User.find()
+    },
+    getUserByUsername: async (_, { username }) => {
+        return await models.User.findOne({ username });
     }
 }

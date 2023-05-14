@@ -89,6 +89,7 @@ module.exports = gql`
     type Query {
         cocktails: [Cocktail!]!,
         user: [User!]!
+        getUserByUsername(username: String!): User,
     }
 
     input userDataTest {
