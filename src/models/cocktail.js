@@ -4,63 +4,63 @@ const mongoose = require('mongoose');
 const cocktailSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        //required: true
     },
     description: {
         type: String,
-        required: true
+        //required: true
     },
     price: {
         type: String,
-        required: true
+        //required: true
     },
     stock: {
         type: String,
-        required: true
+        //required: true
     },
     ingredients: {
         type: [String],
-        required: true
+        //required: true
     },
     juice: {
         type: [String],
-        required: true
+        //required: true
     },
     garnish: {
         type: [String],
-        required: true
+        //required: true
     },
     steps: {
         type: [String],
-        required: true
+        //required: true
     },
     difficulty: {
         type: String,
-        required: true
+        //required: true
     },
     tags: {
         type: [String],
-        required: true
+        //required: true
     },
     images: {
         type: [String],
-        required: true
+        //required: true
     },
     productvideo: {
         type: String,
-        required: true
+        //required: true
     },
     tutorialvideo: {
         type: String,
-        required: true
+        //required: true
     },
     alcoholpercentage: {
         type: String,
-        required: true
+        //required: true
     },
     ingredientimages: {
         type: [String],
-        required: true
+        //required: true
     },
 }, {
     timestamps: true

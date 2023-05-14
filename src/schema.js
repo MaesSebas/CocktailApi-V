@@ -1,35 +1,6 @@
 const { gql } = require('apollo-server-express');
 
 module.exports = gql`
-    type Book {
-        id: ID!
-        title: String!
-        author: User!
-    }
-    type User {
-        id: ID!
-        username: String!
-        email: String!
-        avatar: String
-        books: [Book!]!
-    }
-    type UserData {
-        username: String
-        sex: String
-        name: String
-        lastName: String
-        phoneNumber: String
-        street: String
-        number: String
-        city: String
-        postalCode: String
-        country: String
-        creditcardName: String
-        creditcardLastName: String
-        creditcardNumber: String
-        pushNotifications: String
-        emailUpdates: String
-    }
     type Cocktail {
         id: ID!
         name: String
@@ -48,23 +19,36 @@ module.exports = gql`
         alcoholpercentage: String
         ingredientimages: [String]
     }
-    type Query {
-        hello: String,
-        books: [Book!]!,
-        book(id: ID!): Book!,
-        cocktails: [Cocktail!]!,
-        userData: [UserData!]!,
-        orders: [Order!]!,
-    }
-    type Order {
+    type User {
         id: ID!
+        username: String!
+        email: String!
+        password: String!
+        role: String
+        userdata: UserData
         cartitems: [CartItem]
-        orderid: String!
-        total: String!
-        deliveryoption: String!
+        orders: [Order]
+        uploadedPictures: [String]
     }
+    
+    type UserData {
+        sex: String
+        name: String
+        lastName: String
+        phoneNumber: String
+        street: String
+        number: String
+        city: String
+        postalCode: String
+        country: String
+        creditcardName: String
+        creditcardLastName: String
+        creditcardNumber: String
+        pushNotifications: String
+        emailUpdates: String
+    }
+    
     type CartItem {
-        id: ID
         image: String
         title: String
         size: String
@@ -72,23 +56,101 @@ module.exports = gql`
         itemprice: String
         totalprice: String
     }
-    input cartItemInput {
-        id: ID
-        image: String
-        title: String
-        size: String
-        quantity: String
-        itemprice: String
-        totalprice: String
+
+    input CartItemInput {
+        image: String!
+        title: String!
+        size: String!
+        quantity: String!
+        itemprice: String!
+        totalprice: String!
     }
+      
+    input OrderInput {
+        date: String!
+        orderMethod: String!
+        orderId: String!
+        totalprice: String!
+        items: [CartItemInput]!
+    }
+    
+    type Order {
+        date: String
+        orderMethod: String
+        orderId: String
+        totalprice: String
+        items: [CartItem]
+    }
+
+    type Query {
+        cocktails: [Cocktail!]!,
+        user: [User!]!
+    }
+
+    input userDataTest {
+        sex: String!
+        name: String!
+        lastName: String!
+        phoneNumber: String!
+        street: String!
+        number: String!
+        city: String!
+        postalCode: String!
+        country: String!
+        creditcardName: String!
+        creditcardLastName: String!
+        creditcardNumber: String!
+        pushNotifications: String!
+        emailUpdates: String!
+    }
+
+    input UserDataInput {
+        sex: String
+        name: String
+        lastName: String
+        phoneNumber: String
+        street: String
+        number: String
+        city: String
+        postalCode: String
+        country: String
+        creditcardName: String
+        creditcardLastName: String
+        creditcardNumber: String
+        pushNotifications: String
+        emailUpdates: String
+    }
+
     type Mutation {
-        addOrder(cartitems: [cartItemInput]!, orderid: String!, total: String!, deliveryoption: String!): Order!
-        addBook(title: String!, author: String!): Book!
-        updateBook(id: ID!, title: String!, author: String!): Book!
-        deleteBook(id: ID!): Boolean!
+        createUser (
+            username: String!
+            password: String!
+            userData: userDataTest!
+            cartitems: [CartItemInput]!
+            orders: [OrderInput]!
+            uploadedPictures: [String]!
+        ) : User!
+
+        addOrder (
+            username: String!
+            date: String!
+            orderMethod: String!
+            orderId: String!
+            totalprice: String!
+            items: [CartItemInput]!
+        ): Order!
+
+        addPhoto(
+            username: String!
+            filename: String!
+        ): Boolean!
+
+        deletePhoto(
+            username: String!
+            filename: String!
+        ) : Boolean!
+
+        editData(username: String!, newData: UserDataInput!): User!
         addCocktail(description: String!, garnish: [String]!, ingredients: [String]!, juice: [String]!, name: String!, price: String!, stock: String!, tags: [String]!, steps: [String]!, difficulty: String!, images: [String]!, productVideo: String!, tutorialVideo: String! ): Cocktail!
-        addUserData(username: String!, sex: String!, name: String!, lastName: String!, phoneNumber: String!, street: String!, number: String!, city: String!, postalCode: String!, country: String!, creditcardName: String!, creditcardLastName: String!, creditcardNumber: String!, pushNotifications: String!, emailUpdates: String!): UserData!
-        signUp(username: String!, email: String!, password: String!): String!
-        signIn(username: String, email: String, password: String!): String!
     }
 `;

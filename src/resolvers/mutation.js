@@ -8,16 +8,6 @@ const {
 } = require('apollo-server-express');
 require('dotenv').config();
 
-const CartItem = require('../models/cartitem');
-const newCartItem = new CartItem({
-    image: 'https://example.com/image.jpg',
-    title: 'testxample Ite',
-    size: 'Medium',
-    quantity: 2,
-    itemprice: 9.99,
-    totalprice: 19.98
-});
-
 
 module.exports = {
     addCocktail: async (parent, args, { models }) => {      
@@ -41,112 +31,173 @@ module.exports = {
         return cocktail;
     },
     addOrder: async (parent, args, { models }) => {
-        const order = await models.Order.create({
-            orderid: args.orderid,
-            cartitems: args.cartitems,
-            total: args.total,
-            deliveryoption: args.deliveryoption
-        });
-        
-        return order;
-    },
-    addUserData: async (parent, args, { models }) => {
-        const userData = await models.UserData.create({
-          username: args.username,
-          sex: args.sex,
-          name: args.name,
-          lastName: args.lastName,
-          phoneNumber: args.phoneNumber,
-          street: args.street,
-          number: args.number,
-          city: args.city,
-          postalCode: args.postalCode,
-          country: args.country,
-          creditcardName: args.creditcardName,
-          creditcardLastName: args.creditcardLastName,
-          creditcardNumber: args.creditcardNumber,
-          pushNotifications: args.pushNotifications,
-          emailUpdates: args.emailUpdates
-        });
-      
-        return userData;
-    },
-    addBook: async (parent, args, { models, user }) => {
-        // Check if the user is authenticated      
-        if (!user) {
-          throw new AuthenticationError('You must be logged in to create a book');
-        }
-      
-        // Create the book
-        const book = await models.Book.create({
-          title: args.title,
-          author: args.author
-        });
-      
-        return book;
-    },
-    updateBook: async (parent, { id, title, author }, { models }) => {
-        return await models.Book.findOneAndUpdate(
-        {
-            _id: id,
-        },
-        {
-        $set: {
-            title,
-            author
-        }
-        },
-        {
-        new: true
-        }
-        );
-    },
-    deleteBook: async (parent, { id }, { models }) => {
-        try {
-            await models.Book.findOneAndRemove({ _id: id});
-            return true;
-        } catch (err) {
-            return false;
-        }
-       },
-       signUp: async (parent, { username, email, password }, { models }) => {
-        // normalize email address
-        email = email.trim().toLowerCase();
-        // hash the password
-        const hashed = await bcrypt.hash(password, 10);
-        // create the gravatar url
-        const avatar = gravatar(email);
-        try {
-            const user = await models.User.create({
-                username,
-                email,
-                password: hashed
-        });
-            // create and return the json web token
-            return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-        } catch (err) {
-            console.log(err);
-            throw new Error('Error creating account');
-        }
-       },
-       signIn: async (parent, { username, email, password }, { models }) => {
-        if (email) {
-            email = email.trim().toLowerCase();
-        }
-        const user = await models.User.findOne({
-            $or: [{ email }, { username }]
-        });
-        // if there is no user, throw an authentication error
-        if (!user) {
-            throw new AuthenticationError('Error signing in');
-        }
-        // if the passwords don't match, throw an authentication error
-        const valid = await bcrypt.compare(password, user.password);
-        if (!valid) {
-            throw new AuthenticationError('Error signing in');
-        }
-        // create and return the json web token
-        return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    }
+      try {
+        const { username } = args;
+        const user = await models.User.findOne({ username });
+        //const user = await models.User.findOne({ username });
 
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        const newOrder = {
+          date: args.date,
+          orderMethod: args.orderMethod,
+          totalprice: args.totalprice,
+          orderId: args.orderId,
+          items: args.items.map((item) => ({
+            image: item.image,
+            title: item.title,
+            size: item.size,
+            quantity: item.quantity,
+            itemprice: item.itemprice,
+            totalprice: item.totalprice,
+          })),
+        };
+        
+        // Add the new order object to the orders array
+        user.orders.push(newOrder);
+        await user.save();
+        
+        return newOrder;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+    editData: async (parent, args, { models }) => {
+      const { username, newData } = args;
+      try {
+        const user = await models.User.findOne({ username });
+        if (!user) {
+          throw new Error(`User ${username} not found`);
+        }
+    
+        const updatedUserdata = { ...user.userdata.toObject(), ...newData };
+        const changedFields = Object.keys(newData).filter(key => {
+          return updatedUserdata[key] !== user.userdata[key];
+        });
+    
+        const updates = {};
+        changedFields.forEach(field => {
+          updates[`userdata.${field}`] = updatedUserdata[field];
+        });
+    
+        const updatedUser = await models.User.findOneAndUpdate(
+          { username },
+          { $set: updates },
+          { new: true }
+        );
+    
+        return updatedUser;
+      } catch (err) {
+        throw new Error(`Failed to update user data: ${err.message}`);
+      }
+    },
+    addPhoto: async (parent, args, { models }) => {
+      const { username, filename } = args;
+      //console.log(filename);
+      const user = await models.User.findOne({ username });
+      if (!user) {
+        throw new Error(`User ${username} not found`);
+      }
+    
+      const newPhoto = {
+        name: filename,
+      };
+      
+      // Add the new photo object to the uploadedPictures array
+      user.uploadedPictures.push(newPhoto);
+    
+      try {
+        await user.save();
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    
+      return true;
+    },
+    deletePhoto: async (parent, args, { models }) => {
+      const { username, filename } = args;
+      //console.log(filename);
+      const user = await models.User.findOne({ username });
+      if (!user) {
+        throw new Error(`User ${username} not found`);
+      }
+    
+      // Find the index of the photo to be deleted
+      const photoIndex = user.uploadedPictures.findIndex(photo => photo.name === filename);
+    
+      if (photoIndex === -1) {
+        throw new Error(`Photo ${filename} not found`);
+      }
+    
+      // Remove the photo from the array
+      user.uploadedPictures.splice(photoIndex, 1);
+    
+      try {
+        await user.save();
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    
+      return true;
+    },
+    createUser: async (parent, args, { models }) => {
+        // Hash the password
+      const hashedPassword = await bcrypt.hash(args.password, 10);
+
+      console.log(args.userData);
+
+      // Create user and related data
+      const user = await models.User.create({
+        username: args.username,
+        email: args.email,
+        password: hashedPassword,
+        userdata: {
+          sex: args.userData.sex,
+          name: args.userData.name,
+          lastName: args.userData.lastName,
+          phoneNumber: args.userData.phoneNumber,
+          street: args.userData.street,
+          number: args.userData.number,
+          city: args.userData.city,
+          postalCode: args.userData.postalCode,
+          country: args.userData.country,
+          creditcardName: args.userData.creditcardName,
+          creditcardLastName: args.userData.creditcardLastName,
+          creditcardNumber: args.userData.creditcardNumber,
+          pushNotifications: args.userData.pushNotifications,
+          emailUpdates: args.userData.emailUpdates,
+        },
+        cartitems: args.cartitems.map((item) => ({
+          image: item.image,
+          title: item.title,
+          size: item.size,
+          quantity: item.quantity,
+          itemprice: item.itemprice,
+          totalprice: item.totalprice,
+        })),
+        orders: args.orders.map((order) => ({
+          date: order.date,
+          orderMethod: order.orderMethod,
+          orderId: order.orderId,
+          totalprice: order.totalprice,
+          items: order.items.map((item) => ({
+            image: item.image,
+            title: item.title,
+            size: item.size,
+            quantity: item.quantity,
+            itemprice: item.itemprice,
+            totalprice: item.totalprice,
+          })),
+        })),
+        uploadedPictures: args.uploadedPictures.map((picture) => ({
+          name: picture.name,
+        })),
+      });
+
+      return user;
+    }
 }
