@@ -20,15 +20,19 @@ module.exports = gql`
         ingredientimages: [String]
     }
     type User {
-        id: ID!
-        username: String!
-        email: String!
-        password: String!
+        id: ID
+        username: String
+        email: String
+        password: String
         role: String
         userdata: UserData
         cartitems: [CartItem]
         orders: [Order]
-        uploadedPictures: [String]
+        uploadedPictures: [Photo]
+    }
+
+    type Photo {
+        name: String!
     }
     
     type UserData {
@@ -150,7 +154,31 @@ module.exports = gql`
             filename: String!
         ) : Boolean!
 
-        editData(username: String!, newData: UserDataInput!): User!
-        addCocktail(description: String!, garnish: [String]!, ingredients: [String]!, juice: [String]!, name: String!, price: String!, stock: String!, tags: [String]!, steps: [String]!, difficulty: String!, images: [String]!, productVideo: String!, tutorialVideo: String! ): Cocktail!
+        signIn(
+            username: String, 
+            email: String, 
+            password: String!
+        ): String!
+
+        editData(
+            username: String!, 
+            newData: UserDataInput!
+        ): User!
+
+        addCocktail(
+            description: String!, 
+            garnish: [String]!, 
+            ingredients: [String]!, 
+            juice: [String]!, 
+            name: String!, 
+            price: String!, 
+            stock: String!, 
+            tags: [String]!, 
+            steps: [String]!, 
+            difficulty: String!, 
+            images: [String]!, 
+            productVideo: String!, 
+            tutorialVideo: String! 
+        ): Cocktail!
     }
 `;

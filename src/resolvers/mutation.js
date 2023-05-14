@@ -30,6 +30,30 @@ module.exports = {
       
         return cocktail;
     },
+    signIn: async (parent, { username, email, password }, { models }) => {
+      if (email) {
+          email = email.trim().toLowerCase();
+      }
+      
+      const user = await models.User.findOne({ 
+        username // no email in the database, but if you have one and want to login using both username or email use this -> $or: [{ email }, { username }]
+      });
+      
+      // if there is no user, throw an authentication error
+      if (!user) {
+          throw new AuthenticationError('user is not found');          
+      } else {
+          console.log(user);
+      }
+
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        throw new AuthenticationError('password is incorrect');          
+      }
+
+      // create and return the json web token
+      return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    },
     addOrder: async (parent, args, { models }) => {
       try {
         const { username } = args;
