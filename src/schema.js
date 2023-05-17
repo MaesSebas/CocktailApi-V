@@ -18,6 +18,8 @@ module.exports = gql`
         productvideo: String
         alcoholpercentage: String
         ingredientimages: [String]
+        type: String
+        glass: String
     }
     type User {
         id: ID

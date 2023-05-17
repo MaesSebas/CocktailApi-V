@@ -62,6 +62,12 @@ const cocktailSchema = new mongoose.Schema({
         type: [String],
         //required: true
     },
+    glass: {
+        type: String,
+    },
+    type: {
+        type: String,
+    }
 }, {
     timestamps: true
 });
